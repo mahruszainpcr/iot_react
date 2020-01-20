@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import firebase from "firebase";
-var Highcharts = require('highcharts'); 
 
 
 
@@ -13,41 +12,90 @@ class Hasil extends Component {
           suhu:[]
         }
       }
-      componentDidMount(){
+      timeConverter(UNIX_timestamp){
+        var a = new Date(UNIX_timestamp * 1000);
+        var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        var year = a.getFullYear();
+        var month = months[a.getMonth()];
+        var date = a.getDate();
+        var hour = a.getHours();
+        var min = a.getMinutes();
+        var sec = a.getSeconds();
+        var time = date + ' ' + month + ' ' + year + ' ' + hour + ':' + min + ':' + sec ;
+        return time;
+      }
+      grafik(dataSuhu,atributSuhu){
+        
+var Highcharts = require('highcharts'); 
         Highcharts.chart('container', {
-            chart: {
-                type: 'line'
-            },
-            title: {
-                text: 'Monthly Average Temperature'
-            },
-            subtitle: {
-                text: 'Source: WorldClimate.com'
-            },
-            xAxis: {
-                categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-            },
-            yAxis: {
-                title: {
-                    text: 'Temperature (°C)'
-                }
-            },
-            plotOptions: {
-                line: {
-                    dataLabels: {
-                        enabled: true
-                    },
-                    enableMouseTracking: false
-                }
-            },
-            series: [{
-                name: 'Cahaya',
-                data: [7.0, 6.9, 9.5, 14.5, 18.4, 21.5, 25.2, 26.5, 23.3, 18.3, 13.9, 9.6]
-            }, {
-                name: 'Suhu',
-                data: [3.9, 4.2, 5.7, 8.5, 11.9, 15.2, 17.0, 16.6, 14.2, 10.3, 6.6, 4.8]
-            }]
-        });
+          chart: {
+              type: 'line'
+          },
+          title: {
+              text: 'Data Suhu Ruangan 327'
+          },
+          subtitle: {
+              text: 'Source: WorldClimate.com'
+          },
+          xAxis: {
+              categories: atributSuhu
+          },
+          yAxis: {
+              title: {
+                  text: 'Temperature (°C)'
+              }
+          },
+          plotOptions: {
+              line: {
+                  dataLabels: {
+                      enabled: true
+                  },
+                  enableMouseTracking: false
+              }
+          },
+          series: [{
+              name: 'Suhu Ruang 327',
+              data:dataSuhu
+          }]
+      });
+      }
+      grafik2(dataSuhu,atributSuhu){
+        
+        var Highcharts = require('highcharts'); 
+                Highcharts.chart('container2', {
+                  chart: {
+                      type: 'line'
+                  },
+                  title: {
+                      text: 'Data Cahaya Ruangan 327'
+                  },
+                  subtitle: {
+                      text: 'Source: WorldClimate.com'
+                  },
+                  xAxis: {
+                      categories: atributSuhu
+                  },
+                  yAxis: {
+                      title: {
+                          text: 'Temperature (°C)'
+                      }
+                  },
+                  plotOptions: {
+                      line: {
+                          dataLabels: {
+                              enabled: true
+                          },
+                          enableMouseTracking: false
+                      }
+                  },
+                  series: [{
+                      name: 'Cahaya Ruang 327',
+                      data:dataSuhu
+                  }]
+              });
+              }
+      componentDidMount(){
+        
         const firebaseApp = firebase.initializeApp({
             apiKey: "AIzaSyC2pcBmWbJioki-Hio0VqMzYxS9YWftYWE",
             authDomain: "aua-iot.firebaseapp.com",
@@ -65,19 +113,37 @@ class Hasil extends Component {
 .get()
 .then(querySnapshot => {
   const data = querySnapshot.docs.map(doc => doc.data());
-  //var tempSuhu=[];
-  
-  this.setState({data:data,suhu:tempSuhu});
+  this.setState({data:data});
+  var suhuTemp=[];
+  var atributSuhu=[];
+  var cahayaTemp=[];
+  var atributCahaya=[];
+        for(var i = 0; i < data.length; i++){
+          // console.log(this.timeConverter(data[i].timestamp));
+          if(data[i].topic=="r327/suhu"){
+            suhuTemp.push(parseInt(data[i].msg));
+            atributSuhu.push(this.timeConverter(data[i].timestamp));
+          }
+          if(data[i].topic=="r327/cahaya"){
+            cahayaTemp.push(parseInt(data[i].msg));
+            atributCahaya.push(this.timeConverter(data[i].timestamp));
+          }
+        }
+        this.grafik(suhuTemp,atributSuhu);
+        this.grafik2(cahayaTemp,atributCahaya);
+        // suhu.setState(suhuTemp);
+        
 });
-console.log(this.state.data);
+// console.log(this.state.data);
       }
     render() { 
         const { data,suhu } = this.state;
         
-        console.log(suhu);
+        
           return (
            <div> 
                 <div id="container"></div>
+                <div id="container2"></div>
                <ul>
               {data.map(item => (
                 <li key={item.msg}>
